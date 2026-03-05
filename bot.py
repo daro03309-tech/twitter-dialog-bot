@@ -4,33 +4,70 @@ import random
 import asyncio
 from twikit import Client
 
+async def post_tweet(client, tweet, retry=3):
+
+    for attempt in range(retry):
+        try:
+            print(f"트윗 시도 {attempt+1}/{retry}")
+
+            await client.create_tweet(text=tweet)
+
+            print("트윗 완료")
+            return True
+
+        except Exception as e:
+            print("트윗 실패:", e)
+
+            if attempt < retry - 1:
+                print("5초 후 재시도...")
+                await asyncio.sleep(5)
+
+    print("트윗 최종 실패")
+    return False
+
+
 async def main():
 
-    print("쿠키 로그인 중...")
+    try:
 
-    client = Client()
+        print("쿠키 로그인 중...")
 
-    raw = json.loads(os.environ["TWITTER_COOKIES"])
+        client = Client()
 
-    # 쿠키 형식 자동 변환
-    if isinstance(raw, list):
-        cookies = {c["name"]: c["value"] for c in raw}
-    else:
-        cookies = raw
+        raw = json.loads(os.environ["TWITTER_COOKIES"])
 
-    client.set_cookies(cookies)
+        # 쿠키 형식 자동 변환
+        if isinstance(raw, list):
+            cookies = {c["name"]: c["value"] for c in raw}
+        else:
+            cookies = raw
 
-    print("로그인 성공")
+        client.set_cookies(cookies)
 
-    with open("quotes.txt", "r", encoding="utf-8") as f:
-        lines = f.read().splitlines()
+        print("로그인 성공")
 
-    tweet = random.choice(lines)
+        if not os.path.exists("quotes.txt"):
+            print("quotes.txt 파일이 없습니다.")
+            return
 
-    print("트윗:", tweet)
+        with open("quotes.txt", "r", encoding="utf-8") as f:
+            lines = [line.strip() for line in f.readlines() if line.strip()]
 
-    await client.create_tweet(text=tweet)
+        if not lines:
+            print("quotes.txt에 트윗할 문장이 없습니다.")
+            return
 
-    print("트윗 완료")
+        tweet = random.choice(lines)
+
+        print("선택된 트윗:", tweet)
+
+        # 트윗 전에 약간 대기 (봇 감지 방지)
+        await asyncio.sleep(random.uniform(2, 5))
+
+        await post_tweet(client, tweet)
+
+    except Exception as e:
+        print("전체 실행 오류:", e)
+
 
 asyncio.run(main())
