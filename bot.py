@@ -1,31 +1,36 @@
 import os
 import json
 import random
+import asyncio
 from twikit import Client
 
-print("쿠키 로그인 중...")
+async def main():
 
-client = Client()
+    print("쿠키 로그인 중...")
 
-raw = json.loads(os.environ["TWITTER_COOKIES"])
+    client = Client()
 
-# 쿠키 형식 자동 변환
-if isinstance(raw, list):
-    cookies = {c["name"]: c["value"] for c in raw}
-else:
-    cookies = raw
+    raw = json.loads(os.environ["TWITTER_COOKIES"])
 
-client.set_cookies(cookies)
+    # 쿠키 형식 자동 변환
+    if isinstance(raw, list):
+        cookies = {c["name"]: c["value"] for c in raw}
+    else:
+        cookies = raw
 
-print("로그인 성공")
+    client.set_cookies(cookies)
 
-with open("quotes.txt", "r", encoding="utf-8") as f:
-    lines = f.read().splitlines()
+    print("로그인 성공")
 
-tweet = random.choice(lines)
+    with open("quotes.txt", "r", encoding="utf-8") as f:
+        lines = f.read().splitlines()
 
-print("트윗:", tweet)
+    tweet = random.choice(lines)
 
-client.create_tweet(text=tweet)
+    print("트윗:", tweet)
 
-print("트윗 완료")
+    await client.create_tweet(text=tweet)
+
+    print("트윗 완료")
+
+asyncio.run(main())
