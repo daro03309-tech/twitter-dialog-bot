@@ -1,13 +1,15 @@
-import time
+import os
+import json
 from twikit import Client
 
 client = Client()
 
 print("쿠키 로그인 중...")
 
-client.load_cookies("cookies.txt")
+cookies = json.loads(os.environ["TWITTER_COOKIES"])
+client.set_cookies(cookies)
 
-print("로그인 성공")
+print("로그인 완료")
 
 # 대사 불러오기
 with open("quotes.txt", "r", encoding="utf-8") as f:
